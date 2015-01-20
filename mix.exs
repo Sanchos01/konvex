@@ -16,7 +16,8 @@ defmodule Konvex.Mixfile do
                       :logger,
                       :exactor,
                       :tinca,
-                      :hashex
+                      :hashex,
+                      :exutils
                     ],
      mod: {Konvex, []}]
   end
@@ -34,7 +35,8 @@ defmodule Konvex.Mixfile do
     [
       {:exactor, github: "sasa1977/exactor", tag: "0467f8100bc735405d597dbf94996195eb31e0b6", override: true},
       {:tinca, github: "timCF/tinca"},
-      {:hashex, github: "timCF/hashex"}
+      {:hashex, github: "timCF/hashex"},
+      {:exutils, github: "timCF/exutils"}
     ]
   end
 end

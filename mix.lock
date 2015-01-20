@@ -2,4 +2,4 @@
   "extask": {:git, "git://github.com/timCF/extask.git", "691cc1a515750bead8b81ed6c13cddbcf115d754", []},
   "exutils": {:git, "git://github.com/timCF/exutils.git", "636ca20b1f6788612269a2edda99d47d58bf29b7", []},
   "hashex": {:git, "git://github.com/timCF/hashex.git", "cc6b4307daa1ab18c94cdd33bf3cb8a3dab28b96", []},
-  "tinca": {:git, "git://github.com/timCF/tinca.git", "3af144239ec974b5c332a5be41b8fcedbfc4c08a", []}}
+  "tinca": {:git, "git://github.com/timCF/tinca.git", "1193bd4effa0705b3cf5f9400dc20bcea69883d2", []}}

@@ -89,12 +89,13 @@ defmodule Konvex do
       unquote(read)
       unquote(write)
       defp handle_callback(val), do: raise "#{__MODULE__} : you must re-define handle_callback."
+      defp post_read_callback(some), do: some
       use ExActor.GenServer, export: __MODULE__
       definit do
         {:ok, %{old_raw: %{}, old_processed: %{}}, 0}
       end
       definfo :timeout, state: %{old_raw: old_raw, old_processed: old_processed} do
-        new_raw = read_callback
+        new_raw = read_callback |> post_read_callback
         HashUtils.to_list(new_raw)
         |> Enum.map(
             fn({key, val}) ->
@@ -119,6 +120,7 @@ defmodule Konvex do
       end
       defoverridable  [
                         read_callback: 0,
+                        post_read_callback: 1,
                         write_callback: 2,
                         handle_callback: 1
                       ]

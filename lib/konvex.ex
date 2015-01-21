@@ -90,6 +90,7 @@ defmodule Konvex do
       unquote(write)
       defp handle_callback(val), do: raise "#{__MODULE__} : you must re-define handle_callback."
       defp post_read_callback(some), do: some
+      defp post_handle_callback(some), do: some
       use ExActor.GenServer, export: __MODULE__
       definit do
         {:ok, %{old_raw: %{}, old_processed: %{}}, 0}
@@ -109,6 +110,7 @@ defmodule Konvex do
               end
             end)
         |> HashUtils.to_map
+        |> post_handle_callback
         |> finalize_definfo(old_processed, new_raw)
       end
       defp finalize_definfo(new_processed, old_processed, new_raw) do
@@ -121,6 +123,7 @@ defmodule Konvex do
       defoverridable  [
                         read_callback: 0,
                         post_read_callback: 1,
+                        post_handle_callback: 1,
                         write_callback: 2,
                         handle_callback: 1
                       ]

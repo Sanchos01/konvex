@@ -91,27 +91,32 @@ defmodule Konvex do
       defp handle_callback(val), do: raise "#{__MODULE__} : you must re-define handle_callback."
       defp post_read_callback(some), do: some
       defp post_handle_callback(some), do: some
+      defp time_callback(_), do: nil
       use ExActor.GenServer, export: __MODULE__
       definit do
         {:ok, %{old_raw: %{}, old_processed: %{}}, 0}
       end
       definfo :timeout, state: %{old_raw: old_raw, old_processed: old_processed} do
         new_raw = read_callback |> post_read_callback
-        HashUtils.to_list(new_raw)
-        |> Enum.map(
-            fn({key, val}) ->
-              case HashUtils.get(old_raw, key) do
-                # this clause - not changed, get cached value
-                # we mean handle_callback is clean function
-                ^val -> {key, HashUtils.get(old_processed, key)}
-                # here value changed or new
-                # we must handle it
-                _ -> {key, handle_callback(val)}
-              end
-            end)
-        |> HashUtils.to_map
-        |> post_handle_callback
-        |> finalize_definfo(old_processed, new_raw)
+        {time, res} = :timer.tc(fn() -> 
+          HashUtils.to_list(new_raw)
+          |> Enum.map(
+              fn({key, val}) ->
+                case HashUtils.get(old_raw, key) do
+                  # this clause - not changed, get cached value
+                  # we mean handle_callback is clean function
+                  ^val -> {key, HashUtils.get(old_processed, key)}
+                  # here value changed or new
+                  # we must handle it
+                  _ -> {key, handle_callback(val)}
+                end
+              end)
+          |> HashUtils.to_map
+          |> post_handle_callback
+          |> finalize_definfo(old_processed, new_raw)
+        end)
+        time_callback(time)
+        res
       end
       defp finalize_definfo(new_processed, old_processed, new_raw) do
         {
@@ -125,7 +130,8 @@ defmodule Konvex do
                         post_read_callback: 1,
                         post_handle_callback: 1,
                         write_callback: 2,
-                        handle_callback: 1
+                        handle_callback: 1,
+                        time_callback: 1
                       ]
     end
     #IO.puts Macro.expand(r)

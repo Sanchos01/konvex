@@ -88,7 +88,7 @@ defmodule Konvex do
       unquote(tables_declaration)
       unquote(read)
       unquote(write)
-      defp handle_callback(val), do: raise "#{__MODULE__} : you must re-define handle_callback."
+      defp handle_callback(_,_,_,_), do: raise "#{__MODULE__} : you must re-define handle_callback."
       defp post_read_callback(some), do: some
       defp post_handle_callback(some), do: some
       defp time_callback(_), do: nil
@@ -108,7 +108,7 @@ defmodule Konvex do
                   ^val -> {key, HashUtils.get(old_processed, key)}
                   # here value changed or new
                   # we must handle it
-                  _ -> {key, handle_callback(val)}
+                  old_raw_val -> {key, handle_callback(key, val, old_raw_val, Map.get(old_processed, key))}
                 end
               end)
           |> HashUtils.to_map
@@ -130,7 +130,7 @@ defmodule Konvex do
                         post_read_callback: 1,
                         post_handle_callback: 1,
                         write_callback: 2,
-                        handle_callback: 1,
+                        handle_callback: 4,
                         time_callback: 1
                       ]
     end

@@ -97,6 +97,7 @@ defmodule Konvex do
         {:ok, %{old_raw: %{}, old_processed: %{}}, 0}
       end
       definfo :timeout, state: %{old_raw: old_raw, old_processed: old_processed} do
+        :erlang.garbage_collect
         {time, res} = :timer.tc(fn() -> 
           new_raw = read_callback |> post_read_callback
           HashUtils.to_list(new_raw)

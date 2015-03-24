@@ -53,7 +53,7 @@ defmodule Konvex do
               from when is_atom(from) ->
                       quote location: :keep do
                         defp read_callback do
-                          __MODULE__.Tinca.getall(unquote(from))
+                          __MODULE__.Tinca.iterate_acc(%{}, fn({k,v}, acc) -> Map.put(acc, k, v) end, unquote(from))
                         end
                       end
             end
@@ -66,12 +66,17 @@ defmodule Konvex do
               to when is_atom(to) ->
                       quote location: :keep do
                         defp write_callback(new_state, old_state) do
-                          new_keys  = Map.keys(new_state)
-                          to_delete = Map.keys(old_state) -- new_keys
-                          Enum.each(new_keys, 
-                            fn(key) -> Map.get(new_state, key) |> __MODULE__.Tinca.put(key, unquote(to)) end)
-                          Enum.each(to_delete, 
-                            fn(key) -> __MODULE__.Tinca.delete(key, unquote(to)) end)
+                          new_keys = Enum.reduce(new_state, HashSet.new,
+                                      fn({k,v}, hs) -> 
+                                        __MODULE__.Tinca.put(v, k, unquote(to)) 
+                                        HashSet.put(hs, k)
+                                      end)
+                          Enum.each(old_state, 
+                            fn({k, _}) ->
+                              if not(HashSet.member?(new_keys, k)) do
+                                __MODULE__.Tinca.delete(k, unquote(to))
+                              end
+                            end)
                           new_state
                         end
                       end

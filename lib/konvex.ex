@@ -65,18 +65,19 @@ defmodule Konvex do
                       end
               to when is_atom(to) ->
                       quote location: :keep do
-                        defp write_callback(new_state, old_state) do
+                        defp write_callback(new_state, _) do
                           new_keys = Enum.reduce(new_state, HashSet.new,
                                       fn({k,v}, hs) -> 
                                         __MODULE__.Tinca.put(v, k, unquote(to)) 
                                         HashSet.put(hs, k)
                                       end)
-                          Enum.each(old_state, 
-                            fn({k, _}) ->
+                          __MODULE__.Tinca.iterate(
+                            fn({k,_}) -> 
                               if not(HashSet.member?(new_keys, k)) do
                                 __MODULE__.Tinca.delete(k, unquote(to))
                               end
-                            end)
+                            end,
+                            unquote(to))
                           new_state
                         end
                       end
@@ -89,7 +90,6 @@ defmodule Konvex do
 
     quote location: :keep do
       require Logger
-      require Exutils
       unquote(tables_declaration)
       unquote(read)
       unquote(write)
@@ -104,18 +104,17 @@ defmodule Konvex do
       definfo :timeout, state: %{old_raw: old_raw, old_processed: old_processed} do
         {time, res} = :timer.tc(fn() -> 
           new_raw = read_callback |> post_read_callback
-          Enum.map(new_raw, 
-              fn({key, val}) ->
+          Enum.reduce(new_raw, %{},
+              fn({key, val}, acc) ->
                 case {Map.get(old_raw, key), Map.has_key?(old_processed, key)} do
                   # this clause - not changed, get cached value
                   # we mean handle_callback is clean function
-                  {^val, true} -> {key, Map.get(old_processed, key)}
+                  {^val, true} -> Map.put(acc, key, Map.get(old_processed, key))
                   # here value changed or new
                   # we must handle it
-                  {old_raw_val, _} -> {key, handle_callback(key, val, old_raw_val, Map.get(old_processed, key))}
+                  {old_raw_val, _} -> Map.put(acc, key, handle_callback(key, val, old_raw_val, Map.get(old_processed, key)))
                 end
               end)
-          |> HashUtils.to_map
           |> post_handle_callback
           |> finalize_definfo(old_processed, new_raw)
         end)

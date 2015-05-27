@@ -65,7 +65,7 @@ defmodule Konvex do
                       end
               to when is_atom(to) ->
                       quote location: :keep do
-                        defp write_callback(new_state, _) do
+                        defp write_callback(new_state, old_state) do
                           new_keys = Enum.reduce(new_state, HashSet.new,
                                       fn({k,v}, hs) -> 
                                         __MODULE__.Tinca.put(v, k, unquote(to)) 
@@ -78,6 +78,7 @@ defmodule Konvex do
                               end
                             end,
                             unquote(to))
+                          if (new_state != old_state), do: on_change_state(new_state, old_state)
                           new_state
                         end
                       end
@@ -97,6 +98,7 @@ defmodule Konvex do
       defp post_read_callback(some), do: some
       defp post_handle_callback(some), do: some
       defp time_callback(_), do: nil
+      defp on_change_state(_, _), do: nil
       use ExActor.GenServer, export: __MODULE__
       definit do
         {:ok, %{old_raw: %{}, old_processed: %{}}, 0}
@@ -134,7 +136,8 @@ defmodule Konvex do
                         post_handle_callback: 1,
                         write_callback: 2,
                         handle_callback: 4,
-                        time_callback: 1
+                        time_callback: 1,
+                        on_change_state: 2
                       ]
     end
     #IO.puts Macro.expand(r)
